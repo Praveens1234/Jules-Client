@@ -1,0 +1,51 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.24.0'
+
+      - name: Initialize Flutter Project
+        # Generate platform code
+        run: |
+          rm -rf android ios web macos windows linux
+          flutter create . --org com.jules.client --platforms android
+
+      - name: Configure Android Min SDK
+        # flutter_secure_storage requires minSdkVersion 18
+        # Flutter default might be lower depending on template, though usually 19+.
+        # We enforce 21 to be safe and modern.
+        run: |
+          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' android/app/build.gradle
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --debug --split-per-abi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: jules-client-apk
+          path: build/app/outputs/flutter-apk/app-armeabi-v7a-debug.apk

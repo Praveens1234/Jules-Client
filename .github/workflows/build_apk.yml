@@ -27,13 +27,13 @@ jobs:
 
       - name: Initialize Flutter Project
         # Generate platform code
+        # We explicitly set project-name to jules_client to avoid errors if the repo name has hyphens/caps
         run: |
           rm -rf android ios web macos windows linux
-          flutter create . --org com.jules.client --platforms android
+          flutter create . --org com.jules.client --project-name jules_client --platforms android
 
       - name: Configure Android Min SDK
         # flutter_secure_storage requires minSdkVersion 18
-        # Flutter default might be lower depending on template, though usually 19+.
         # We enforce 21 to be safe and modern.
         run: |
           sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' android/app/build.gradle
